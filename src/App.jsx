@@ -16,6 +16,8 @@ import RegionForm from './components/expense/RegionForm';
 import ExpenseForm from './components/expense/ExpenseForm';
 import ExpensesTable from './components/ExpensesTable';
 import CreateUser from './components/auth/CreateUser';
+import APITest from './components/APITest';
+import APIDebug from './components/APIDebug';
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -131,6 +133,8 @@ const App = () => {
             <Route path="/user-login" element={<UserLogin />} />
             <Route path="/region-form" element={<RegionForm />} />
             <Route path="/add-user" element={<CreateUser />} />
+            <Route path="/api-test" element={<APITest />} />
+            <Route path="/api-debug" element={<APIDebug />} />
 
             {/* Protected routes */}
             <Route

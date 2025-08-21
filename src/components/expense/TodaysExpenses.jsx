@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import { expenseAPI, apiUtils } from '../../services/apiService';
 import { FaSyncAlt } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -24,25 +24,19 @@ export default function TodaysExpenses() {
         try {
             setLoading(true);
             setError("");
-            const token = localStorage.getItem("token");
-            const userId = localStorage.getItem("userId");
-
-            if (!token) {
+            
+            if (!apiUtils.isAuthenticated()) {
                 setError("Unauthorized. Please log in.");
-                setLoading(false);
                 return;
             }
-
-            const res = await axios.get(
-                `https://dos-expence.onrender.com/api/expense/${userId}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-
-            setExpenses(res.data);
+            
+            const userId = apiUtils.getCurrentUser().userId;
+            const data = await expenseAPI.getExpensesByUser(userId);
+            
+            setExpenses(data);
         } catch (err) {
-            setError(err.response?.data?.error || "Failed to fetch expenses.");
+            const { message } = apiUtils.handleError(err);
+            setError(message);
         } finally {
             setLoading(false);
         }

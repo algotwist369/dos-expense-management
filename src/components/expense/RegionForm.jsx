@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { regionAPI, apiUtils } from '../../services/apiService';
 
 const RegionForm = () => {
     const [regionName, setRegionName] = useState('');
@@ -40,11 +40,12 @@ const RegionForm = () => {
                 name: regionName,
                 areas,
             };
-            const response = await axios.post('https://dos-expence.onrender.com/api/region', payload);
+            const result = await regionAPI.createRegion(payload);
             alert('Region created successfully!');
-            console.log(response.data);
+            console.log(result);
         } catch (error) {
-            console.error('Submission Error:', error.response?.data || error.message);
+            const { message } = apiUtils.handleError(error);
+            console.error('Submission Error:', message);
         }
     };
 

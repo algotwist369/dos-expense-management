@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import { expenseAPI, apiUtils } from '../services/apiService';
 import { saveAs } from "file-saver";
 import { FaSyncAlt } from "react-icons/fa";
 import { useTheme } from '../context/ThemeContext';
@@ -61,30 +61,37 @@ const ExpensesTable = () => {
     }
   };
 
-  const token = localStorage.getItem("token");
-
   const handleShow = () => {
     isShow(!show);
   }
 
   // Fetch data
   useEffect(() => {
-    setLoading(true);
-    axios
-      .get("https://dos-expence.onrender.com/api/expense", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setExpenses(data);
-        setFiltered(data);
+    const fetchExpenses = async () => {
+      try {
+        setLoading(true);
+        
+        if (!apiUtils.isAuthenticated()) {
+          console.error("User not authenticated");
+          setLoading(false);
+          return;
+        }
+        
+        const data = await expenseAPI.getAllExpenses();
+        const expensesArray = Array.isArray(data) ? data : data.data || [];
+        
+        setExpenses(expensesArray);
+        setFiltered(expensesArray);
+      } catch (err) {
+        const { message } = apiUtils.handleError(err);
+        console.error("Error fetching expenses:", message);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching expenses:", err);
-        setLoading(false);
-      });
-  }, [token]);
+      }
+    };
+    
+    fetchExpenses();
+  }, []);
 
   // Filtering logic
   useEffect(() => {

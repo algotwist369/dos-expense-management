@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-
-const base_url = "https://dos-expence.onrender.com/api/auth";
+import { authAPI, apiUtils } from '../services/apiService';
 
 const AuthContext = createContext();
 
@@ -29,12 +27,11 @@ export const AuthProvider = ({ children }) => {
     const registerAdmin = async (email, phone, password) => {
         try {
             setError('');
-            const { data } = await axios.post(`${base_url}/admin/register`, {
-                email, phone, password
-            });
+            const data = await authAPI.registerAdmin(email, phone, password);
             return data;
         } catch (err) {
-            setError(err.response?.data?.error || 'Registration failed');
+            const { message } = apiUtils.handleError(err);
+            setError(message);
             throw err;
         }
     };
@@ -43,14 +40,10 @@ export const AuthProvider = ({ children }) => {
     const adminLogin = async (emailOrPhone, password) => {
         try {
             setError('');
-            const { data } = await axios.post(`${base_url}/admin/login`, {
-                emailOrPhone, password
-            });
+            const data = await authAPI.adminLogin(emailOrPhone, password);
 
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('userId', data._id);
-            localStorage.setItem('name', data.name); // ✅ Fix added here
+            // Set session data using utility function
+            apiUtils.setSession(data);
 
             setCurrentUser({
                 token: data.token,
@@ -61,7 +54,8 @@ export const AuthProvider = ({ children }) => {
 
             return data;
         } catch (err) {
-            setError(err.response?.data?.error || 'Login failed');
+            const { message } = apiUtils.handleError(err);
+            setError(message);
             throw err;
         }
     };
@@ -70,19 +64,11 @@ export const AuthProvider = ({ children }) => {
     const createUser = async (name, pin) => {
         try {
             setError('');
-            const token = localStorage.getItem('token');
-
-            const { data } = await axios.post(`${base_url}/admin/create-user`, {
-                name, pin
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
+            const data = await authAPI.createUser(name, pin);
             return data;
         } catch (err) {
-            setError(err.response?.data?.error || 'User creation failed');
+            const { message } = apiUtils.handleError(err);
+            setError(message);
             throw err;
         }
     };
@@ -91,14 +77,10 @@ export const AuthProvider = ({ children }) => {
     const userLogin = async (name, pin) => {
         try {
             setError('');
-            const { data } = await axios.post(`${base_url}/user/login`, {
-                name, pin
-            });
+            const data = await authAPI.userLogin(name, pin);
 
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('name', data.name);
-            localStorage.setItem('userId', data._id);
+            // Set session data using utility function
+            apiUtils.setSession(data);
 
             setCurrentUser({
                 token: data.token,
@@ -109,17 +91,15 @@ export const AuthProvider = ({ children }) => {
 
             return data;
         } catch (err) {
-            setError(err.response?.data?.error || 'Login failed');
+            const { message } = apiUtils.handleError(err);
+            setError(message);
             throw err;
         }
     };
 
     // Logout
     const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('name');
-        localStorage.removeItem('userId');
+        apiUtils.clearSession();
         setCurrentUser(null);
     };
 

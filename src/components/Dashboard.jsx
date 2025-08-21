@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { regionAPI, expenseAPI, apiUtils } from '../services/apiService';
 
 const ExpenseForm = ({ user }) => {
     const [form, setForm] = useState({
@@ -16,25 +16,39 @@ const ExpenseForm = ({ user }) => {
     const [regions, setRegions] = useState([]);
 
     useEffect(() => {
-        axios.get("https://dos-expence.onrender.com/api/region").then((res) => setRegions(res.data));
+        const fetchRegions = async () => {
+            try {
+                const data = await regionAPI.getAllRegions();
+                setRegions(data);
+            } catch (err) {
+                const { message } = apiUtils.handleError(err);
+                console.error("Failed to fetch regions:", message);
+            }
+        };
+        fetchRegions();
     }, []);
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await axios.post("https://dos-expence.onrender.com/api/expense", { ...form, user: user._id });
-        alert("Expense added!");
-        setForm({
-            date: "",
-            amount: "",
-            category: "",
-            type: "Advertising",
-            description: "",
-            region: "",
-            area: "",
-            centre: "",
-        });
+        try {
+            await expenseAPI.createExpense({ ...form, user: user._id });
+            alert("Expense added!");
+            setForm({
+                date: "",
+                amount: "",
+                category: "",
+                type: "Advertising",
+                description: "",
+                region: "",
+                area: "",
+                centre: "",
+            });
+        } catch (err) {
+            const { message } = apiUtils.handleError(err);
+            console.error("Failed to add expense:", message);
+        }
     };
 
     const selectedRegion = regions.find((r) => r._id === form.region);
