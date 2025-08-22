@@ -115,9 +115,9 @@ export default function TodaysExpenses() {
                         type="button"
                         onClick={() => window.location.reload()}
                         aria-label="Refresh expenses"
-                        className="flex text-lg items-center justify-center px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md shadow-md transition-colors duration-200"
+                        className="flex text-lg items-center justify-center px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-md shadow-md transition-colors duration-200"
                     >
-                        <FaSyncAlt className="animate-spin-slow mr-2" />
+                        <FaSyncAlt className="mr-2" />
                         Refresh
                     </button>
                 </div>

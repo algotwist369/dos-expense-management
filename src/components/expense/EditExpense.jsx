@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { regionAPI, expenseAPI, apiUtils } from "../../services/apiService";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { RxCross2 } from "react-icons/rx";
 import { IoArrowBack } from "react-icons/io5";
@@ -35,19 +35,8 @@ const MultiSelect = ({ label, options, selected, onToggle, disabled, isSingleSel
 
     const handleToggle = (value) => {
         onToggle(value);
-        const option = options.find(opt => opt.name === value);
-        if (option) {
-            const isSelected = !selected.includes(value);
-            toast.info(`${option.name} ${isSelected ? 'selected' : 'unselected'}`, {
-                position: "top-right",
-                autoClose: 1000,
-                hideProgressBar: true,
-                closeOnClick: true,
-                pauseOnHover: false,
-                draggable: true,
-                progress: undefined,
-            });
-        }
+        // Removed toast notification to prevent duplicate toasts
+        // The selection is visually indicated by the checkbox state
     };
 
     useEffect(() => {
@@ -458,18 +447,6 @@ const EditExpense = () => {
 
     return (
         <div className={`min-h-screen py-2 px-4 transition-colors duration-200 ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
-            <ToastContainer 
-                position="top-right" 
-                autoClose={3000} 
-                hideProgressBar={false} 
-                newestOnTop 
-                closeOnClick 
-                rtl={false} 
-                pauseOnFocusLoss 
-                draggable 
-                pauseOnHover 
-                theme={isDarkMode ? 'dark' : 'light'}
-            />
             <form
                 onSubmit={handleSubmit}
                 className={`p-10 rounded-2xl max-w-11/12 mx-auto shadow-xl space-y-9 border-2 my-8 transition-all duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700 shadow-gray-900/50' : 'bg-white border-gray-100 shadow-lg'}`}

@@ -1,12 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/Header';
 import LoadingSpinner from './components/LoadingSpinner';
-import StatsCard from './components/StatsCard';
 import Breadcrumb from './components/Breadcrumb';
 import Footer from './components/Footer';
-import { FaUsers, FaMapMarkedAlt } from 'react-icons/fa';
 
 // Auth Pages
 import AdminRegister from './pages/auth/AdminRegister';
@@ -18,21 +18,54 @@ import ExpensesTable from './components/ExpensesTable';
 import CreateUser from './components/auth/CreateUser';
 import APITest from './components/APITest';
 import APIDebug from './components/APIDebug';
+import SocialMedia from './socialMedia/SocialMedia';
+
+// Root redirect component
+const RootRedirect = () => {
+  const { currentUser, loading } = useAuth();
+
+  // Show loading while authentication state is being determined
+  if (loading) {
+    return <LoadingSpinner size="lg" text="Loading..." />;
+  }
+
+  // If no user is authenticated, redirect to user login
+  if (!currentUser) {
+    return <Navigate to="/user-login" />;
+  }
+
+  // Redirect based on user role
+  if (currentUser.role === 'admin') {
+    return <Navigate to="/admin-dashboard" />;
+  } else {
+    return <Navigate to="/user-dashboard" />;
+  }
+};
 
 // Protected route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { currentUser, loading } = useAuth();
 
-  if (loading) return <LoadingSpinner size="lg" text="Authenticating..." />;
+  console.log('ProtectedRoute:', { currentUser, loading, allowedRoles });
 
-  if (!currentUser) {
-    return <Navigate to="/admin-login" />;
+  // Add a small delay to ensure auth state is properly loaded
+  if (loading) {
+    return <LoadingSpinner size="lg" text="Authenticating..." />;
   }
 
+  // Check if user is authenticated
+  if (!currentUser) {
+    console.log('ProtectedRoute: No current user, redirecting to /user-login');
+    return <Navigate to="/user-login" />; 
+  }
+
+  // Check if user has required role
   if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
+    console.log('ProtectedRoute: User role not allowed, redirecting to /');
     return <Navigate to="/" />;
   }
 
+  console.log('ProtectedRoute: User authenticated and authorized');
   return children;
 };
 
@@ -50,51 +83,19 @@ const AdminDashboard = () => {
           </div>
     
           {/* Action Buttons */}
-          <div className="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <button
               onClick={() => navigate("/region-form")}
-              className="bg-blue-600 text-white px-8 py-6 rounded-2xl shadow-xl flex items-center justify-center space-x-3 border border-blue-500"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >
-              {/* Icon */}
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <FaMapMarkedAlt className="w-5 h-5 text-white" />
-              </div>
-              
-              {/* Text */}
-              <div className="text-left">
-                <span className="text-lg font-bold block">Add Region</span>
-                <span className="text-sm text-blue-100 opacity-80">Manage locations</span>
-              </div>
-              
-              {/* Arrow */}
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+              Add Region
             </button>
 
             <button
               onClick={() => navigate("/add-user")}
-              className="bg-green-600 text-white px-8 py-6 rounded-2xl shadow-xl flex items-center justify-center space-x-3 border border-green-500"
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
-              {/* Icon */}
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <FaUsers className="w-5 h-5 text-white" />
-              </div>
-              
-              {/* Text */}
-              <div className="text-left">
-                <span className="text-lg font-bold block">Add User</span>
-                <span className="text-sm text-green-100 opacity-80">Create account</span>
-              </div>
-              
-              {/* Arrow */}
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
+              Add User
             </button>
           </div>
 
@@ -113,6 +114,7 @@ const AdminDashboard = () => {
 const UserDashboard = () => (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <Header />
+    <SocialMedia/>
     <div className="p-4">
       <ExpenseForm />
     </div>
@@ -127,7 +129,7 @@ const App = () => {
         <ThemeProvider>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<Navigate to="/user-login" />} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/register-admin" element={<AdminRegister />} />
             <Route path="/ad-lgn" element={<AdminLogin />} />
             <Route path="/user-login" element={<UserLogin />} />
@@ -155,8 +157,22 @@ const App = () => {
             />
 
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<RootRedirect />} />
           </Routes>
+          
+          {/* Global Toast Container */}
+          <ToastContainer 
+            position="top-right" 
+            autoClose={3000} 
+            hideProgressBar={false} 
+            newestOnTop 
+            closeOnClick 
+            rtl={false} 
+            pauseOnFocusLoss 
+            draggable 
+            pauseOnHover 
+            theme="colored"
+          />
         </ThemeProvider>
       </AuthProvider>
     </Router>

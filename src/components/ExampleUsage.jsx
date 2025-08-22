@@ -185,7 +185,7 @@ const ExampleUsage = () => {
     apiUtils.clearSession();
     toast.info('Logged out successfully');
     // Redirect to login page
-    window.location.href = '/admin-login';
+    window.location.href = '/user-login';
   };
 
   // Load data on component mount

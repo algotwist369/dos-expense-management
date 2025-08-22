@@ -18,7 +18,9 @@ import {
     FaBuilding,
     FaCheck,
     FaSearch,
-    FaChevronDown
+    FaChevronDown,
+    FaExclamationTriangle,
+    FaTimes
 } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
@@ -152,14 +154,13 @@ const ExpenseForm = () => {
 
     // Common vendors/payees for advertising expenses
     const commonPayees = [
-        "Social Media",
         "Website (domain, hosting, apis, etc.)",
         "Youtube",
         "Influencer",
         "SMS",
         "Justdial",
         "Google Ads",
-        "Meta Ads",
+        "Double Tik",
         "Other"
 
     ];
@@ -182,10 +183,13 @@ const ExpenseForm = () => {
         area: [],
         centre: [],
     });
+    const [showCustomAmount, setShowCustomAmount] = useState(false);
+    const [showCustomReason, setShowCustomReason] = useState(false);
 
     const [customPayee, setCustomPayee] = useState("");
     const [loading, setLoading] = useState(false);
     const [regions, setRegions] = useState([]);
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
     useEffect(() => {
         const fetchRegions = async () => {
@@ -211,7 +215,7 @@ const ExpenseForm = () => {
                 });
             }
         };
-        
+
         fetchRegions();
     }, []);
 
@@ -379,7 +383,6 @@ const ExpenseForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
         // Check authentication
         if (!apiUtils.isAuthenticated()) {
@@ -387,7 +390,6 @@ const ExpenseForm = () => {
                 position: "top-center",
                 autoClose: 3000
             });
-            setLoading(false);
             return;
         }
 
@@ -397,7 +399,6 @@ const ExpenseForm = () => {
                 position: "top-center",
                 autoClose: 3000
             });
-            setLoading(false);
             return;
         }
 
@@ -406,9 +407,16 @@ const ExpenseForm = () => {
                 position: "top-center",
                 autoClose: 3000
             });
-            setLoading(false);
             return;
         }
+
+        // Show confirmation dialog instead of submitting directly
+        setShowConfirmation(true);
+    };
+
+    const handleConfirmSubmit = async () => {
+        setShowConfirmation(false);
+        setLoading(true);
 
         try {
             toast.info("Submitting expense...", {
@@ -457,20 +465,171 @@ const ExpenseForm = () => {
         }
     };
 
+    const handleCancelSubmit = () => {
+        setShowConfirmation(false);
+    };
+
+    // Confirmation Modal Component
+    const ConfirmationModal = () => {
+        if (!showConfirmation) return null;
+
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className={`max-w-2xl w-full rounded-2xl shadow-2xl border-2 transition-all duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
+                    {/* Header */}
+                    <div className={`flex items-center justify-between p-6 border-b-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                        <div className="flex items-center">
+                            <div className={`p-3 rounded-full mr-4 ${isDarkMode ? 'bg-orange-900 text-orange-300' : 'bg-orange-100 text-orange-600'}`}>
+                                <FaExclamationTriangle className="h-6 w-6" />
+                            </div>
+                            <h3 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                Confirm Expense Submission
+                            </h3>
+                        </div>
+                        <button
+                            onClick={handleCancelSubmit}
+                            className={`p-2 rounded-lg transition-colors duration-200 ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                        >
+                            <FaTimes className="h-6 w-6" />
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                        <p className={`text-lg mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Please review your expense details before submitting:
+                        </p>
+
+                        {/* Expense Details */}
+                        <div className={`rounded-xl p-6 mb-6 ${isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50 border border-gray-200'}`}>
+                            <h4 className={`text-lg font-semibold mb-4 flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                                <FaClipboardList className="h-5 w-5 mr-2" />
+                                Expense Details
+                            </h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Date:</span>
+                                    <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {new Date(form.date).toLocaleDateString('en-US', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Paid To:</span>
+                                    <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{form.paidTo}</p>
+                                </div>
+
+                                <div>
+                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Amount:</span>
+                                    <p className={`font-semibold text-lg ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                                        ₹{Number(form.amount).toLocaleString('en-IN')}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Regions:</span>
+                                    <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {form.region.length} selected
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-4">
+                                <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Reason:</span>
+                                <p className={`mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{form.reason}</p>
+                            </div>
+
+                            {/* Selected Locations Summary */}
+                            {form.region.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
+                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Selected Locations:</span>
+                                    <div className="mt-2 space-y-2">
+                                        {form.region.map((region, index) => (
+                                            <div key={index} className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                <span className="font-medium">• {region}</span>
+                                                {form.area.filter(area => {
+                                                    const regionData = regions.find(r => r.name === region);
+                                                    return regionData?.areas?.some(a => a.name === area);
+                                                }).map((area, areaIndex) => (
+                                                    <div key={areaIndex} className="ml-4">
+                                                        <span>  - {area}</span>
+                                                        {form.centre.filter(centre => {
+                                                            const areaData = getAreas().find(a => a.name === area);
+                                                            return areaData?.centres?.some(c => c.name === centre);
+                                                        }).map((centre, centreIndex) => (
+                                                            <div key={centreIndex} className="ml-4">
+                                                                <span>    • {centre}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-blue-900/20 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+                            <p className={`text-sm flex items-center ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+                                <FaInfoCircle className="mr-2" />
+                                <strong>Note:</strong> Once submitted, this expense will be recorded and cannot be undone. Please ensure all details are correct.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className={`flex justify-end gap-4 p-6 border-t-2 ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                        <button
+                            onClick={handleCancelSubmit}
+                            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmSubmit}
+                            disabled={loading}
+                            className={`px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'}`}
+                        >
+                            {loading ? (
+                                <span className="flex items-center">
+                                    <FaSpinner className="animate-spin mr-2 h-4 w-4" />
+                                    Submitting...
+                                </span>
+                            ) : (
+                                'Confirm & Submit'
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <div className={`min-h-screen py-2 px-4 transition-colors duration-200 ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
-            <ToastContainer 
-                position="top-right" 
-                autoClose={3000} 
-                hideProgressBar={false} 
-                newestOnTop 
-                closeOnClick 
-                rtl={false} 
-                pauseOnFocusLoss 
-                draggable 
-                pauseOnHover 
+        <div className={`${['shailesh', 'saurabh', 'omprakash', 'omkar', 'khushi'].includes(localStorage.getItem('name')) ? 'hidden' : 'block'} min-h-screen py-2 px-4 transition-colors duration-200 ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
                 theme={isDarkMode ? 'dark' : 'light'}
             />
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal />
+
             <form
                 onSubmit={handleSubmit}
                 className={`p-10 rounded-2xl max-w-11/12 mx-auto shadow-xl space-y-9 border-2 my-8 transition-all duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700 shadow-gray-900/50' : 'bg-white border-gray-100 shadow-lg'}`}
@@ -478,8 +637,8 @@ const ExpenseForm = () => {
                 <div className="text-start mb-4">
 
                     <div className="flex items-center gap-3 mb-3">
-                        <button 
-                            className={`p-2 rounded-lg transition-all duration-200 ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`} 
+                        <button
+                            className={`p-2 rounded-lg transition-all duration-200 ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
                             onClick={() => navigate(-1)}
                         >
                             <IoArrowBack />
@@ -544,20 +703,57 @@ const ExpenseForm = () => {
                             <FaRupeeSign className="h-4 w-4 mr-2 text-blue-500" />
                             Amount (₹)
                         </label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <FaRupeeSign className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                            </div>
-                            <input
-                                type="number"
-                                name="amount"
-                                value={form.amount}
-                                onChange={handleChange}
-                                placeholder="0.00"
+
+                        {/* Amount Selection */}
+                        <div className="space-y-3">
+                            {/* Predefined Amount Select */}
+                            <select
+                                name="amountSelect"
+                                value={showCustomAmount ? "custom" : (form.amount || "")}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "custom") {
+                                        setShowCustomAmount(true);
+                                        setForm(prev => ({ ...prev, amount: "" }));
+                                    } else if (value) {
+                                        setShowCustomAmount(false);
+                                        setForm(prev => ({ ...prev, amount: value }));
+                                    }
+                                }}
+                                className={`border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-sm appearance-none w-full ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'}`}
                                 required
-                                min={0}
-                                className={`border rounded-lg pl-8 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-sm w-full ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'}`}
-                            />
+                            >
+                                <option value="" disabled>Select amount or choose custom</option>
+                                <option value="500">₹500</option>
+                                <option value="1000">₹1,000</option>
+                                <option value="2000">₹2,000</option>
+                                <option value="5000">₹5,000</option>
+                                <option value="10000">₹10,000</option>
+                                <option value="20000">₹20,000</option>
+                                <option value="50000">₹50,000</option>
+                                <option value="100000">₹1,00,000</option>
+                                <option value="custom">Custom Amount</option>
+                            </select>
+
+                            {/* Custom Amount Input - Show only when "Custom Amount" is selected */}
+                            {showCustomAmount && (
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <FaRupeeSign className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        name="amount"
+                                        value={form.amount}
+                                        onChange={handleChange}
+                                        placeholder="Enter custom amount"
+                                        required
+                                        min={0}
+                                        step="0.01"
+                                        className={`border rounded-lg pl-8 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-sm w-full ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'}`}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -756,23 +952,50 @@ const ExpenseForm = () => {
                 >
                     <label className={`flex items-center text-base font-semibold mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         <FaEdit className="h-5 w-5 mr-2 text-blue-500" />
-                        Reason for Expense  
+                        Reason for Expense
                     </label>
-                    <div className="relative">
-                        <textarea
-                            name="reason"
-                            value={form.reason}
-                            onChange={handleChange}
-                            placeholder="Explain the purpose of this expense"
+                    <div className="space-y-3">
+                        {/* Predefined Reason Select */}
+                        <select
+                            name="reasonSelect"
+                            value={showCustomReason ? "custom" : (form.reason || "")}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "custom") {
+                                    setShowCustomReason(true);
+                                    setForm(prev => ({ ...prev, reason: "" }));
+                                } else if (value) {
+                                    setShowCustomReason(false);
+                                    setForm(prev => ({ ...prev, reason: value }));
+                                }
+                            }}
+                            className={`border-2 rounded-lg px-4 py-3.5 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-sm appearance-none w-full ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-gray-900'}`}
                             required
-                            rows={4}
-                            className={`w-full border-2 rounded-lg px-4 py-3.5 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-sm hover:border-blue-300 transition-colors duration-200 ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'}`}
-                        />
-                        <div className={`text-xs mt-2 flex justify-between items-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            <span className="flex items-center">
-                            </span>
-                            <span className={`px-2 py-1 rounded-md ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{form.reason.length} characters</span>
-                        </div>
+                        >
+                            <option value="" disabled>Select reason or choose custom</option>
+                            <option value="Fund Add">Fund Add</option>
+                            <option value="custom">Custom Reason</option>
+                        </select>
+
+                        {/* Custom Reason Input - Show only when "Custom Reason" is selected */}
+                        {showCustomReason && (
+                            <div className="relative">
+                                <textarea
+                                    name="reason"
+                                    value={form.reason}
+                                    onChange={handleChange}
+                                    placeholder="Explain the purpose of this expense"
+                                    required
+                                    rows={4}
+                                    className={`w-full border-2 rounded-lg px-4 py-3.5 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 shadow-sm hover:border-blue-300 transition-colors duration-200 ${isDarkMode ? 'border-gray-600 bg-gray-800 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'}`}
+                                />
+                                <div className={`text-xs mt-2 flex justify-between items-center ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <span className="flex items-center">
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-md ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{form.reason.length} characters</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -11,16 +11,25 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role');
-        const name = localStorage.getItem('name');
-        const userId = localStorage.getItem('userId');
+        const initializeAuth = () => {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            const name = localStorage.getItem('name');
+            const userId = localStorage.getItem('userId');
 
-        if (token && role && name) {
-            setCurrentUser({ token, role, name, userId });
-        }
+            console.log('AuthContext: Initializing auth state', { token: !!token, role, name, userId });
 
-        setLoading(false);
+            if (token && role && name) {
+                console.log('AuthContext: Setting current user', { role, name });
+                setCurrentUser({ token, role, name, userId });
+            } else {
+                console.log('AuthContext: No valid auth data found');
+            }
+            setLoading(false);
+        };
+
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(initializeAuth);
     }, []);
 
     // Admin Registration
@@ -116,7 +125,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

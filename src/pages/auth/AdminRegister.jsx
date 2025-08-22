@@ -28,7 +28,7 @@ const AdminRegister = () => {
             setError("");
             setLoading(true);
             await registerAdmin(email, phone, password);
-            navigate("/admin-login");
+            navigate("/ad-lgn");
         } catch (err) {
             setError(err.message || "Failed to register");
         } finally {
@@ -123,7 +123,7 @@ const AdminRegister = () => {
                     {/* Link */}
                     <div className="text-center text-sm text-gray-600">
                         <Link
-                            to="/admin-login"
+                            to="/ad-lgn"
                             className="hover:text-green-600 transition"
                         >
                             Already have an account? Login

@@ -23,7 +23,12 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/user-login');
+    // Redirect to appropriate login page based on current user role
+    if (currentUser?.role === 'admin') {
+      navigate('/ad-lgn');
+    } else {
+      navigate('/user-login');
+    }
   };
 
   const handleNavigation = (path) => {
