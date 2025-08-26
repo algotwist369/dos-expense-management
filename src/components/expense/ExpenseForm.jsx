@@ -162,7 +162,6 @@ const ExpenseForm = () => {
         "Google Ads",
         "Double Tik",
         "Other"
-
     ];
 
     // Get current date in YYYY-MM-DD format for the date input
@@ -196,14 +195,7 @@ const ExpenseForm = () => {
             try {
                 const data = await regionAPI.getAllRegions();
                 setRegions(data);
-                toast.success("Regions loaded successfully", {
-                    position: "bottom-right",
-                    autoClose: 2000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true
-                });
+                // toast.success("Regions loaded successfully");
             } catch (err) {
                 const { message } = apiUtils.handleError(err);
                 console.error("Failed to fetch regions", err);

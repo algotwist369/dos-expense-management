@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { expenseAPI, apiUtils } from '../services/apiService';
-import { saveAs } from "file-saver";
+import { expenseAPI, apiUtils } from '../../services/apiService';
 import { FaSyncAlt } from "react-icons/fa";
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +16,8 @@ import {
   Filler,
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import GoogleAdsDashboard from '../googleAds/GoogleAdsDashboard';
+import GoogleAdsDashboard from '../../googleAds/GoogleAdsDashboard';
+import { HiRefresh } from "react-icons/hi";
 
 // Register Chart.js components
 ChartJS.register(
@@ -35,7 +35,6 @@ ChartJS.register(
 
 const ExpensesTable = () => {
   const { isDarkMode } = useTheme();
-  const [show, isShow] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -43,11 +42,11 @@ const ExpensesTable = () => {
   const [paidToFilter, setPaidToFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("thisMonth");
   const [page, setPage] = useState(1);
-  const [activeTab, setActiveTab] = useState("analytics");  
+  const [activeTab, setActiveTab] = useState("analytics");
   const [loading, setLoading] = useState(true);
-  const [showArea, setShowArea] = useState(false);
+  const [showArea, setShowArea] = useState(true);
   const [showCentre, setShowCentre] = useState(false);
-  const itemsPerPage = 5;
+  const itemsPerPage = 15;
 
   // Helper function to safely parse dates
   const parseDate = (dateString) => {
@@ -60,26 +59,24 @@ const ExpensesTable = () => {
       return null;
     }
   };
-
-  const handleShow = () => {
-    isShow(!show);
-  }
-
-  // Fetch data
+ 
+  // Fetch Expenses data
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
         setLoading(true);
-        
+
         if (!apiUtils.isAuthenticated()) {
           console.error("User not authenticated");
           setLoading(false);
           return;
         }
-        
+
         const data = await expenseAPI.getAllExpenses();
         const expensesArray = Array.isArray(data) ? data : data.data || [];
-        
+        console.log("expensesArray: ", expensesArray);
+
+
         setExpenses(expensesArray);
         setFiltered(expensesArray);
       } catch (err) {
@@ -89,9 +86,34 @@ const ExpensesTable = () => {
         setLoading(false);
       }
     };
-    
+
     fetchExpenses();
   }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+
+      if (!apiUtils.isAuthenticated()) {
+        console.error("User not authenticated");
+        setLoading(false);
+        return;
+      }
+
+      const data = await expenseAPI.getAllExpenses();
+      const expensesArray = Array.isArray(data) ? data : data.data || [];
+      console.log("expensesArray: ", expensesArray);
+
+      setExpenses(expensesArray);
+      setFiltered(expensesArray);
+    } catch (err) {
+      const { message } = apiUtils.handleError(err);
+      console.error("Error fetching expenses:", message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // Filtering logic
   useEffect(() => {
@@ -232,13 +254,13 @@ const ExpensesTable = () => {
     // Simple trend data - last 30 days
     const trendLabels = [];
     const trendData = [];
-    
+
     for (let i = 29; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toLocaleDateString('en-GB');
       trendLabels.push(dateStr);
-      
+
       // Calculate total for this date from filtered data
       const dayTotal = filtered
         .filter(e => {
@@ -413,7 +435,7 @@ const ExpensesTable = () => {
     const dateA = parseDate(a.date);
     const dateB = parseDate(b.date);
     if (!dateA && !dateB) return 0;
-    if (!dateA) return 1; // Invalid dates go to the end
+    if (!dateA) return 1;
     if (!dateB) return -1;
     return dateB - dateA;
   });
@@ -425,37 +447,6 @@ const ExpensesTable = () => {
 
   // Total payment
   const totalPayment = filtered.reduce((sum, e) => sum + (e.amount || 0), 0);
-
-  // Export CSV
-  const exportCSV = () => {
-    const headers = [
-      "Date",
-      "User",
-      "Paid To",
-      "Amount",
-      "Reason",
-      "Region",
-      "Area",
-      "Centre",
-    ];
-    const rows = filtered.map((e) => [
-      (() => {
-        const date = parseDate(e.date);
-        return date ? date.toLocaleDateString('en-GB') : 'Invalid Date';
-      })(),
-      e.user?.name || "",
-      e.paidTo || "",
-      e.amount || "",
-      e.reason || "",
-      (e.region || []).join(", "),
-      (e.area || []).join(", "),
-      (e.centre || []).join(", "),
-    ]);
-    const csvContent =
-      [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "expenses.csv");
-  };
 
   // Loading Component
   const LoadingSpinner = () => (
@@ -469,6 +460,14 @@ const ExpensesTable = () => {
     </div>
   );
 
+  const [rotating, setRotating] = useState(false);
+
+  const handleRefresh = () => {
+    setRotating(true);
+    setTimeout(() => setRotating(false), 360);
+    fetchExpenses();
+  };
+
 
 
   return (
@@ -479,15 +478,14 @@ const ExpensesTable = () => {
         <div className={`flex mb-8 rounded-xl shadow-md p-2 transition-colors duration-200 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <button
             onClick={() => setActiveTab("analytics")}
-            className={`flex-1 px-6 py-4 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
-              activeTab === "analytics"
-                ? isDarkMode 
-                  ? "text-blue-400 bg-blue-900/50" 
-                  : "text-blue-600 bg-blue-50"
-                : isDarkMode 
-                  ? "text-gray-400 hover:text-gray-200" 
-                  : "text-gray-500"
-            }`}
+            className={`flex-1 px-6 py-4 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${activeTab === "analytics"
+              ? isDarkMode
+                ? "text-blue-400 bg-blue-900/50"
+                : "text-blue-600 bg-blue-50"
+              : isDarkMode
+                ? "text-gray-400 hover:text-gray-200"
+                : "text-gray-500"
+              }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -496,15 +494,14 @@ const ExpensesTable = () => {
           </button>
           <button
             onClick={() => setActiveTab("table")}
-            className={`flex-1 px-6 py-4 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
-              activeTab === "table"
-                ? isDarkMode 
-                  ? "text-blue-400 bg-blue-900/50" 
-                  : "text-blue-600 bg-blue-50"
-                : isDarkMode 
-                  ? "text-gray-400 hover:text-gray-200" 
-                  : "text-gray-500"
-            }`}
+            className={`flex-1 px-6 py-4 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${activeTab === "table"
+              ? isDarkMode
+                ? "text-blue-400 bg-blue-900/50"
+                : "text-blue-600 bg-blue-50"
+              : isDarkMode
+                ? "text-gray-400 hover:text-gray-200"
+                : "text-gray-500"
+              }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -513,15 +510,14 @@ const ExpensesTable = () => {
           </button>
           <button
             onClick={() => setActiveTab("googleAds")}
-            className={`flex-1 px-6 py-4 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
-              activeTab === "googleAds"
-                ? isDarkMode 
-                  ? "text-blue-400 bg-blue-900/50" 
-                  : "text-blue-600 bg-blue-50"
-                : isDarkMode 
-                  ? "text-gray-400 hover:text-gray-200" 
-                  : "text-gray-500"
-            }`}
+            className={`flex-1 px-6 py-4 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${activeTab === "googleAds"
+              ? isDarkMode
+                ? "text-blue-400 bg-blue-900/50"
+                : "text-blue-600 bg-blue-50"
+              : isDarkMode
+                ? "text-gray-400 hover:text-gray-200"
+                : "text-gray-500"
+              }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -535,15 +531,26 @@ const ExpensesTable = () => {
         {activeTab !== "googleAds" && (
           <div className={`rounded-xl shadow-md p-6 mb-8 transition-colors duration-200 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
             {/* Section Header */}
-            <div className="flex items-center gap-2 mb-4">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <h3 className={`text-lg font-semibold transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                Filters & Controls
-              </h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 mb-4">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <h3 className={`text-lg font-semibold transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Filters & Controls
+                </h3>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="flex gap-2 p-2 rounded-md bg-gray-100 dark:bg-gray-700"
+              >
+                <HiRefresh
+                  className={`text-2xl transition-transform duration-500 ${rotating ? "rotate-[360deg]" : ""
+                    }`}
+                /> Refresh
+              </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
               {/* Search Input */}
               <div>
@@ -557,28 +564,26 @@ const ExpensesTable = () => {
                   <input
                     type="text"
                     placeholder="Search by name, reason, or paid to..."
-                    className={`border rounded-lg pl-10 pr-3 py-3 w-full outline-none transition-colors duration-200 ${
-                      isDarkMode 
-                        ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400' 
-                        : 'border-gray-200 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 placeholder-gray-400'
-                    }`}
+                    className={`border rounded-lg pl-10 pr-3 py-3 w-full outline-none transition-colors duration-200 ${isDarkMode
+                      ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
+                      : 'border-gray-200 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 placeholder-gray-400'
+                      }`}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
               </div>
-              
+
               {/* Region Filter */}
               <div>
                 <label className={`block text-sm font-medium mb-2 transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Filter by Region
                 </label>
                 <select
-                  className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors duration-200 ${
-                    isDarkMode 
-                      ? 'border-gray-600 bg-gray-700 text-white' 
-                      : 'border-gray-200'
-                  }`}
+                  className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors duration-200 ${isDarkMode
+                    ? 'border-gray-600 bg-gray-700 text-white'
+                    : 'border-gray-200'
+                    }`}
                   value={regionFilter}
                   onChange={(e) => setRegionFilter(e.target.value)}
                 >
@@ -598,11 +603,10 @@ const ExpensesTable = () => {
                   Filter by Paid To
                 </label>
                 <select
-                  className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors duration-200 ${
-                    isDarkMode 
-                      ? 'border-gray-600 bg-gray-700 text-white' 
-                      : 'border-gray-200'
-                  }`}
+                  className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors duration-200 ${isDarkMode
+                    ? 'border-gray-600 bg-gray-700 text-white'
+                    : 'border-gray-200'
+                    }`}
                   value={paidToFilter}
                   onChange={(e) => setPaidToFilter(e.target.value)}
                 >
@@ -615,18 +619,17 @@ const ExpensesTable = () => {
                     ))}
                 </select>
               </div>
-              
+
               {/* Date Filter */}
               <div>
                 <label className={`block text-sm font-medium mb-2 transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Filter by Date
                 </label>
                 <select
-                  className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors duration-200 ${
-                    isDarkMode 
-                      ? 'border-gray-600 bg-gray-700 text-white' 
-                      : 'border-gray-200'
-                  }`}
+                  className={`border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors duration-200 ${isDarkMode
+                    ? 'border-gray-600 bg-gray-700 text-white'
+                    : 'border-gray-200'
+                    }`}
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
                 >
@@ -639,20 +642,6 @@ const ExpensesTable = () => {
                   <option value="thisYear">This Year</option>
                 </select>
               </div>
-              
-              {/* Results Count */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Results
-                </label>
-                <div className={`p-3 rounded-lg border transition-colors duration-200 ${
-                  isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <div className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    Showing {filtered.length} of {expenses.length}
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Column Toggle Buttons */}
@@ -660,15 +649,14 @@ const ExpensesTable = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowArea(!showArea)}
-                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
-                    showArea 
-                      ? isDarkMode 
-                        ? 'bg-green-900/50 text-green-400 border border-green-600' 
-                        : 'bg-green-100 text-green-700 border border-green-200'
-                      : isDarkMode 
-                        ? 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600' 
-                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                  }`}
+                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${showArea
+                    ? isDarkMode
+                      ? 'bg-green-900/50 text-green-400 border border-green-600'
+                      : 'bg-green-100 text-green-700 border border-green-200'
+                    : isDarkMode
+                      ? 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }`}
                   type="button"
                   title={showArea ? 'Hide Area column' : 'Show Area column'}
                 >
@@ -680,15 +668,14 @@ const ExpensesTable = () => {
                 </button>
                 <button
                   onClick={() => setShowCentre(!showCentre)}
-                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
-                    showCentre 
-                      ? isDarkMode 
-                        ? 'bg-green-900/50 text-green-400 border border-green-600' 
-                        : 'bg-green-100 text-green-700 border border-green-200'
-                      : isDarkMode 
-                        ? 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600' 
-                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                  }`}
+                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${showCentre
+                    ? isDarkMode
+                      ? 'bg-green-900/50 text-green-400 border border-green-600'
+                      : 'bg-green-100 text-green-700 border border-green-200'
+                    : isDarkMode
+                      ? 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }`}
                   type="button"
                   title={showCentre ? 'Hide Centre column' : 'Show Centre column'}
                 >
@@ -707,30 +694,26 @@ const ExpensesTable = () => {
           <>
             {/* Table Header */}
             <div className={`rounded-xl shadow-md p-6 mb-6 transition-colors duration-200 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="flex items-center gap-2 mb-4">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <h3 className={`text-lg font-semibold transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                  Expense Records
-                </h3>
-                <span className={`text-sm px-2 py-1 rounded-full transition-colors duration-200 ${
-                  isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {filtered.length} records
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className={`text-lg font-semibold transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Total Expenses: <span className="text-green-600">₹{totalPayment.toLocaleString()}</span>
+                  </h3>,
+                  <span className={`text-sm px-2 py-1 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                    {filtered.length} records
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Table */}
-            <div className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-200 ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`rounded-lg shadow-sm border overflow-hidden transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className={`border-b transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
-                  }`}>
+                  <thead className={`border-b transition-colors duration-200 ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                    }`}>
                     <tr>
                       {[
                         "Date",
@@ -744,67 +727,57 @@ const ExpensesTable = () => {
                       ].map((header) => (
                         <th
                           key={header}
-                          className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-500'
-                          }`}
+                          className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'
+                            }`}
                         >
                           {header}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className={`divide-y transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 divide-gray-700' : 'bg-white divide-gray-200'
-                  }`}>
+                  <tbody className={`divide-y transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 divide-gray-700' : 'bg-white divide-gray-200'
+                    }`}>
                     {paginatedData.length > 0 ? (
                       paginatedData.map((e) => (
-                        <tr key={e._id} className={`transition-colors duration-150 ${
-                          isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-                        }`}>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                        <tr key={e._id} className={`transition-colors duration-150 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
                           }`}>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                            }`}>
                             {(() => {
                               const date = parseDate(e.date);
                               return date ? date.toLocaleDateString('en-GB') : 'Invalid Date';
                             })()}
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-100' : 'text-gray-900'
-                          }`}>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium transition-colors duration-200 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                            }`}>
                             {e.user?.name || 'Unknown'}
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-100' : 'text-gray-900'
-                          }`}>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                            }`}>
                             {e.paidTo || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                             ₹{parseFloat(e.amount).toLocaleString()}
                           </td>
-                          <td className={`px-6 py-4 text-sm max-w-xs transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>
+                          <td className={`px-6 py-4 text-sm max-w-xs transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
                             <div className="truncate" title={e.reason}>
                               {e.reason || 'No reason provided'}
                             </div>
                           </td>
-                          <td className={`px-6 py-4 text-sm transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-100' : 'text-gray-900'
-                          }`}>
+                          <td className={`px-6 py-4 text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                            }`}>
                             {(e.region || []).join(", ")}
                           </td>
                           {showArea && (
-                            <td className={`px-6 py-4 text-sm transition-colors duration-200 ${
-                              isDarkMode ? 'text-gray-100' : 'text-gray-900'
-                            }`}>
+                            <td className={`px-6 py-4 text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                              }`}>
                               {(e.area || []).join(", ")}
                             </td>
                           )}
                           {showCentre && (
-                            <td className={`px-6 py-4 text-sm transition-colors duration-200 ${
-                              isDarkMode ? 'text-gray-100' : 'text-gray-900'
-                            }`}>
+                            <td className={`px-6 py-4 text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                              }`}>
                               {(e.centre || []).join(", ")}
                             </td>
                           )}
@@ -813,9 +786,8 @@ const ExpensesTable = () => {
                     ) : (
                       <tr>
                         <td
-                          className={`px-6 py-12 text-center transition-colors duration-200 ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}
+                          className={`px-6 py-12 text-center transition-colors duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}
                           colSpan={6 + (showArea ? 1 : 0) + (showCentre ? 1 : 0)}
                         >
                           No expenses found
@@ -832,32 +804,30 @@ const ExpensesTable = () => {
               <div className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 Showing {((page - 1) * itemsPerPage) + 1} to {Math.min(page * itemsPerPage, filtered.length)} of {filtered.length} results
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isDarkMode 
-                      ? 'text-gray-300 bg-gray-700 border border-gray-600 hover:bg-gray-600' 
-                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${isDarkMode
+                    ? 'text-gray-300 bg-gray-700 border border-gray-600 hover:bg-gray-600'
+                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                    }`}
                 >
                   Previous
                 </button>
-                
+
                 <span className={`px-3 py-2 text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Page {page} of {totalPages}
                 </span>
-                
+
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isDarkMode 
-                      ? 'text-gray-300 bg-gray-700 border border-gray-600 hover:bg-gray-600' 
-                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${isDarkMode
+                    ? 'text-gray-300 bg-gray-700 border border-gray-600 hover:bg-gray-600'
+                    : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                    }`}
                 >
                   Next
                 </button>
@@ -875,36 +845,31 @@ const ExpensesTable = () => {
               <>
                 {/* Analytics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
+                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-50'}`}>
                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                       </div>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${
-                        isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-700'
+                        }`}>
                         {filtered.length > 0 ? ((filtered.length / expenses.length) * 100).toFixed(1) : 0}%
                       </span>
                     </div>
-                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                       ₹{analytics.totalAmount?.toLocaleString() || '0'}
                     </h3>
-                    <p className={`text-sm transition-colors duration-200 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                       Total Expenses ({filtered.length} transactions)
                     </p>
                   </div>
 
-                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
+                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-green-900/30' : 'bg-green-50'}`}>
                         <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -912,115 +877,98 @@ const ExpensesTable = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                       </div>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${
-                        isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
-                      }`}>
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
+                        }`}>
                         Regions
                       </span>
                     </div>
-                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                       {Object.keys(analytics.expensesByRegion || {}).length}
                     </h3>
-                    <p className={`text-sm transition-colors duration-200 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                       Active Regions
                     </p>
                   </div>
 
-                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
+                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-purple-900/30' : 'bg-purple-50'}`}>
                         <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                         </svg>
                       </div>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${
-                        isDarkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'
-                      }`}>
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'
+                        }`}>
                         Users
                       </span>
                     </div>
-                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                       {Object.keys(analytics.expensesByUser || {}).length}
                     </h3>
-                    <p className={`text-sm transition-colors duration-200 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                       Active Users
                     </p>
                   </div>
 
-                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
+                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-orange-900/30' : 'bg-orange-50'}`}>
                         <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       </div>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${
-                        isDarkMode ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-100 text-orange-700'
-                      }`}>
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-100 text-orange-700'
+                        }`}>
                         Top
                       </span>
                     </div>
-                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                       ₹{analytics.maxAmount ? analytics.maxAmount.toLocaleString() : '0'}
                     </h3>
-                    <p className={`text-sm transition-colors duration-200 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                       Highest Expense
                     </p>
                   </div>
 
-                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
+                  <div className={`p-6 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-red-900/30' : 'bg-red-50'}`}>
                         <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${
-                        isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-700'
+                        }`}>
                         Today
                       </span>
                     </div>
-                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <h3 className={`text-2xl font-bold mb-1 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                       ₹{analytics.todayTotal ? analytics.todayTotal.toLocaleString() : '0'}
                     </h3>
-                    <p className={`text-sm transition-colors duration-200 ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p className={`text-sm transition-colors duration-200 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                       Today's Expenses ({analytics.todayExpenses || 0})
                     </p>
                   </div>
                 </div>
 
                 {/* Charts Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
                   {/* Trend Chart */}
-                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
-                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
+                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                     }`}>
+                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
                       30-Day Expense Trend
                     </h3>
                     <div className="h-80">
@@ -1029,15 +977,13 @@ const ExpensesTable = () => {
                   </div>
 
                   {/* Region Distribution */}
-                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
-                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
+                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                     }`}>
+                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
                       Expenses by Region
                     </h3>
-                    <div className="h-80">
+                    <div className="h-[460px]">
                       <Doughnut
                         data={regionChartData}
                         options={{
@@ -1047,7 +993,7 @@ const ExpensesTable = () => {
                             legend: {
                               position: 'bottom',
                               labels: {
-                                padding: 20,
+                                padding: 25,
                                 usePointStyle: true,
                               }
                             }
@@ -1058,12 +1004,10 @@ const ExpensesTable = () => {
                   </div>
 
                   {/* User Expenses */}
-                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
-                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
+                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                     }`}>
+                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
                       Top Users by Expenses
                     </h3>
                     <div className="h-80">
@@ -1072,12 +1016,10 @@ const ExpensesTable = () => {
                   </div>
 
                   {/* Paid To Analysis */}
-                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
-                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
+                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                     }`}>
+                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
                       Top Recipients by Expenses
                     </h3>
                     <div className="h-80">
@@ -1089,12 +1031,10 @@ const ExpensesTable = () => {
                 {/* Additional Analytics */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Top Reasons */}
-                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
-                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
+                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                     }`}>
+                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
                       Top Expense Reasons
                     </h3>
                     <div className="space-y-4">
@@ -1102,18 +1042,15 @@ const ExpensesTable = () => {
                         .sort(([, a], [, b]) => b - a)
                         .slice(0, 8)
                         .map(([reason, amount], index) => (
-                          <div key={reason} className={`flex items-center justify-between p-4 rounded-lg border transition-colors duration-200 ${
-                            isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'
-                          }`}>
+                          <div key={reason} className={`flex items-center justify-between p-4 rounded-lg border transition-colors duration-200 ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'
+                            }`}>
                             <div className="flex items-center">
-                              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-4 transition-colors duration-200 ${
-                                isDarkMode ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-600'
-                              }`}>
+                              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-4 transition-colors duration-200 ${isDarkMode ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-600'
+                                }`}>
                                 {index + 1}
                               </span>
-                              <span className={`font-medium truncate max-w-[400px] transition-colors duration-200 ${
-                                isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                              }`}>{reason}</span>
+                              <span className={`font-medium truncate max-w-[400px] transition-colors duration-200 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                }`}>{reason}</span>
                             </div>
                             <span className="font-bold text-green-600 text-lg">₹{amount.toLocaleString()}</span>
                           </div>
@@ -1122,12 +1059,10 @@ const ExpensesTable = () => {
                   </div>
 
                   {/* Monthly Breakdown */}
-                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-                  }`}>
-                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${
-                      isDarkMode ? 'text-white' : 'text-gray-800'
+                  <div className={`p-8 rounded-xl shadow-md border transition-colors duration-200 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
                     }`}>
+                    <h3 className={`text-xl font-bold mb-6 transition-colors duration-200 ${isDarkMode ? 'text-white' : 'text-gray-800'
+                      }`}>
                       Monthly Expense Breakdown
                     </h3>
                     <div className="space-y-4">
@@ -1135,12 +1070,10 @@ const ExpensesTable = () => {
                         .sort(([a], [b]) => new Date(a) - new Date(b))
                         .slice(0, 8)
                         .map(([month, amount]) => (
-                          <div key={month} className={`flex items-center justify-between p-4 rounded-lg border transition-colors duration-200 ${
-                            isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'
-                          }`}>
-                            <span className={`font-medium transition-colors duration-200 ${
-                              isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                            }`}>{month}</span>
+                          <div key={month} className={`flex items-center justify-between p-4 rounded-lg border transition-colors duration-200 ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'
+                            }`}>
+                            <span className={`font-medium transition-colors duration-200 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                              }`}>{month}</span>
                             <span className="font-bold text-blue-600 text-lg">₹{amount.toLocaleString()}</span>
                           </div>
                         ))}

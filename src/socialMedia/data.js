@@ -1,11 +1,11 @@
 export const userData = {
     saurabh: [
         {
-            name: "Pune",   // Location
+            name: "Pune PCMC",
             areas: [
                 {
-                    name: "Spa World PCMC",   // Area
-                    centres: [ // Center
+                    name: "Spa World PCMC",
+                    centres: [
                         { name: "Viva Spa PCMC" },
                         { name: "SPA NEST PCMC" },
                         { name: "AMORE SPA PCMC" },
@@ -42,7 +42,19 @@ export const userData = {
                     ]
                 }
             ]
-        }
+        },
+        {
+            name: "Satara",
+            areas: [
+                {
+                    name: "Wellness Spa Satara",
+                    centres: [
+                        { name: "Wellness Spa Satara" },
+                    ]
+                }
+            ]
+        },
+
     ],
 
     shailesh: [
@@ -80,6 +92,7 @@ export const userData = {
                     name: "arththaispa.ahmedabad",
                     centres: [
                         { name: "Arth Thai Spa Ahmedabad" },
+                        { name: "Oceanic Spa Ahmedabad" },
                         { name: "Neung Thai Spa Ahmedabad" },
                         { name: "Royal Oak Spa Ahmedabad" }
                     ]
@@ -191,7 +204,7 @@ export const userData = {
                     name: "royaloakspa.kanpur@gmail.com",
                     centres: [
                         { name: "Royal Oak Spa Kanpur" },
-                        { name: "Spa Empire Lucknow" }
+                        { name: "Spa Berry Gorakhpur" }
                     ]
                 }
             ]
@@ -329,11 +342,11 @@ export const userData = {
 
     omkar: [
         {
-            name: "Mumbai",   // Location
+            name: "Mumbai",
             areas: [
                 {
-                    name: "Dadar",   // Area
-                    centres: [ // Center
+                    name: "Dadar",
+                    centres: [
                         { name: "Crystal Spa Vikhroli" },
                         { name: "Atharava Spa Dadar" },
                         { name: "Royal Oak Spa Dadar" },
@@ -345,8 +358,8 @@ export const userData = {
                     ]
                 },
                 {
-                    name: "Bandra",   // Area
-                    centres: [ // Center
+                    name: "Bandra",
+                    centres: [
                         { name: "Spa Palm Amore Bandra" },
                         { name: "Bling Spa Kandivali" },
                         { name: "Spa World Colaba" },
@@ -355,8 +368,8 @@ export const userData = {
                     ]
                 },
                 {
-                    name: "Malad",   // Area
-                    centres: [ // Center
+                    name: "Malad",
+                    centres: [
                         { name: "Unicorn Spa Andheri" },
                         { name: "Spa Soul Malad" },
                         { name: "SPA NEST Andheri" },
@@ -366,8 +379,8 @@ export const userData = {
                     ]
                 },
                 {
-                    name: "Goregaon",   // Area
-                    centres: [ // Center
+                    name: "Goregaon",
+                    centres: [
                         { name: "Unicorn Spa Goregaon" },
                         { name: "Comfort Spa Goregaon" },
                         { name: "Regal Spa Nalasopara" },
@@ -378,8 +391,8 @@ export const userData = {
                     ]
                 },
                 {
-                    name: "Virar",   // Area
-                    centres: [ // Center
+                    name: "Virar",
+                    centres: [
                         { name: "Kiyora Spa Virar" },
                         { name: "Zaara Spa Mira Road" },
                         { name: "D KNOCK Spa Virar" },
@@ -388,8 +401,8 @@ export const userData = {
                     ]
                 },
                 {
-                    name: "ARTH THAI SPA BORIVALI",   // Area
-                    centres: [ // Center
+                    name: "ARTH THAI SPA BORIVALI",
+                    centres: [
                         { name: "ARTH THAI SPA Borivali" },
                         { name: "Viva Spa Mulund" },
                         { name: "Royal Oak Spa Gorai" },
@@ -400,8 +413,8 @@ export const userData = {
                     ]
                 },
                 {
-                    name: "Oceanic Spa Bandra",   // Area
-                    centres: [ // Center
+                    name: "Oceanic Spa Bandra",
+                    centres: [
                         { name: "Oceanic Spa Bandra" },
                         { name: "Spa Zone Mulund" },
                         { name: "Eva Spa Mulund" },
@@ -421,16 +434,27 @@ export const userData = {
                 }
             ]
         },
+        {
+            name: "Navi Mumbai",
+            areas: [
+                {
+                    name: "Sanpada",
+                    centres: [
+                        { name: "Yell'o Salon Vashi" },
+                    ]
+                }
+            ]
+        },
 
     ],
 
     khushi: [
         {
-            name: "Nagpur",   // Location
+            name: "Nagpur",
             areas: [
                 {
-                    name: "oceanic spa ",   // Area
-                    centres: [ // Center
+                    name: "oceanic spa ",
+                    centres: [
                         { name: "Oceanic spa nagpur " },
                         { name: "Regal Spa " },
                         { name: "Delight Spa" },
@@ -549,6 +573,12 @@ export const userData = {
         {
             name: "Thane",
             areas: [
+                {
+                    name: "Avantra Spa Thane",
+                    centres: [
+                        { name: "Avantra Spa Thane" },
+                    ]
+                },
                 {
                     name: "Heritage Spa Thane",
                     centres: [

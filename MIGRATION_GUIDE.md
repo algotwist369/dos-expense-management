@@ -85,7 +85,6 @@ useEffect(() => {
         .get("https://dos-expence.onrender.com/api/region")
         .then((res) => {
             setRegions(res.data);
-            toast.success("Regions loaded successfully");
         })
         .catch((err) => {
             console.error("Failed to fetch regions", err);
@@ -131,7 +130,6 @@ useEffect(() => {
         try {
             const data = await regionAPI.getAllRegions();
             setRegions(data);
-            toast.success("Regions loaded successfully");
         } catch (err) {
             const { message } = apiUtils.handleError(err);
             toast.error(message);

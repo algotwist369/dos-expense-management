@@ -1,13 +1,13 @@
 // Environment configuration
 const config = {
   // API Configuration
-  API_BASE_URL: 'https://dos.adminspaadvisor.in/api',
-  // API_BASE_URL: 'http://localhost:5000/api',
+  // API_BASE_URL: 'https://dos.adminspaadvisor.in/api',
+  API_BASE_URL: 'http://localhost:5000/api',
   // API_BASE_URL: 'https://dos-expence.onrender.com/api',
   
   // Auth endpoints
-  // AUTH_BASE_URL: 'http://localhost:5000/api/auth',
-  AUTH_BASE_URL: 'https://dos.adminspaadvisor.in/auth',
+  AUTH_BASE_URL: 'http://localhost:5000/api/auth',
+  // AUTH_BASE_URL: 'https://dos.adminspaadvisor.in/auth',
   // AUTH_BASE_URL: 'https://dos-expence.onrender.com/api/auth',
   
   // Feature flags

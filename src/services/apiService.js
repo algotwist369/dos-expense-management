@@ -110,11 +110,21 @@ export const expenseAPI = {
     return response.data;
   },
 
-  // Get expenses by user
-  getExpensesByUser: async (userId, params = {}) => {
-    const response = await apiClient.get(`/expense/${userId}`, { params });
+  // Get filtered expenses
+  getFilteredExpenses: async (filters = {}) => {
+    const response = await apiClient.get('/expense/filtered', { params: filters });
     return response.data;
   },
+
+
+  // Get expenses by user
+  getExpensesByUser: async (userId) => {
+    const token = localStorage.getItem("token");
+    const res = await axios.get(`http://localhost:5000/api/expense/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data;
+  }, 
 
   // Get expense by ID
   getExpenseById: async (expenseId) => {
@@ -140,11 +150,6 @@ export const expenseAPI = {
     return response.data;
   },
 
-  // Get filtered expenses
-  getFilteredExpenses: async (filters = {}) => {
-    const response = await apiClient.get('/expense/filtered', { params: filters });
-    return response.data;
-  },
 
   // Get user's expenses (paginated)
   getMyExpenses: async (params = {}) => {
@@ -152,6 +157,8 @@ export const expenseAPI = {
     return response.data;
   }
 };
+
+
 
 // ==================== REGION APIs ====================
 
@@ -248,7 +255,7 @@ export const analyticsAPI = {
 export const exportAPI = {
   // Export expenses to CSV
   exportExpensesToCSV: async (filters = {}) => {
-    const response = await apiClient.get('/export/expenses/csv', { 
+    const response = await apiClient.get('/export/expenses/csv', {
       params: filters,
       responseType: 'blob'
     });
@@ -257,7 +264,7 @@ export const exportAPI = {
 
   // Export expenses to Excel
   exportExpensesToExcel: async (filters = {}) => {
-    const response = await apiClient.get('/export/expenses/excel', { 
+    const response = await apiClient.get('/export/expenses/excel', {
       params: filters,
       responseType: 'blob'
     });
@@ -268,7 +275,7 @@ export const exportAPI = {
   importExpensesFromCSV: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     const response = await apiClient.post('/import/expenses/csv', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -283,10 +290,10 @@ export const exportAPI = {
 export const apiUtils = {
   // Handle API errors
   handleError: (error) => {
-    const message = error.response?.data?.message || 
-                   error.response?.data?.error || 
-                   error.message || 
-                   'An error occurred';
+    const message = error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      'An error occurred';
     return { error: true, message };
   },
 

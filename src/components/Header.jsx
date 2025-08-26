@@ -13,7 +13,6 @@ import {
   FaChartBar,
   FaSync
 } from 'react-icons/fa';
-import NotificationBadge from './NotificationBadge';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -84,15 +83,6 @@ const Header = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-              title="Refresh Page"
-            >
-              <FaSync className="h-5 w-5" />
-            </button>
-
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}

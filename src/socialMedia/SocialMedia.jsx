@@ -514,10 +514,13 @@ const SocialMedia = () => {
     // Predefined amount options
     const amountOptions = [
         { value: '500', label: '₹500' },
+        { value: '3000', label: '₹3000' },
+        { value: '6000', label: '₹6000' },
         { value: '1000', label: '₹1,000' },
         { value: '2000', label: '₹2,000' },
         { value: '5000', label: '₹5,000' },
         { value: '10000', label: '₹10,000' },
+        { value: '15000', label: '₹15000' },
         { value: '20000', label: '₹20,000' },
         { value: '50000', label: '₹50,000' },
         { value: '100000', label: '₹1,00,000' },

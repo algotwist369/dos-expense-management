@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  authAPI, 
-  expenseAPI, 
-  regionAPI, 
-  userAPI, 
-  analyticsAPI, 
-  exportAPI, 
-  apiUtils 
+import {
+  authAPI,
+  expenseAPI,
+  regionAPI,
+  userAPI,
+  analyticsAPI,
+  exportAPI,
+  apiUtils
 } from '../services/apiService';
 import { toast } from 'react-toastify';
 
@@ -20,7 +20,7 @@ const ExampleUsage = () => {
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      
+
       // Check if user is authenticated
       if (!apiUtils.isAuthenticated()) {
         toast.error('Please login first');
@@ -42,7 +42,7 @@ const ExampleUsage = () => {
 
       setExpenses(Array.isArray(result) ? result : result.data || []);
       toast.success('Expenses loaded successfully!');
-      
+
     } catch (error) {
       const { message } = apiUtils.handleError(error);
       toast.error(message);
@@ -55,7 +55,7 @@ const ExampleUsage = () => {
   const createExpense = async (expenseData) => {
     try {
       setLoading(true);
-      
+
       const result = await expenseAPI.createExpense({
         user: apiUtils.getCurrentUser().userId,
         paidTo: expenseData.paidTo,
@@ -70,7 +70,7 @@ const ExampleUsage = () => {
       toast.success('Expense created successfully!');
       fetchExpenses(); // Refresh the list
       return result;
-      
+
     } catch (error) {
       const { message } = apiUtils.handleError(error);
       toast.error(message);
@@ -113,7 +113,7 @@ const ExampleUsage = () => {
       };
 
       const blob = await exportAPI.exportExpensesToCSV(filters);
-      
+
       // Download the file
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -123,7 +123,7 @@ const ExampleUsage = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast.success('Export completed!');
     } catch (error) {
       const { message } = apiUtils.handleError(error);
@@ -135,19 +135,19 @@ const ExampleUsage = () => {
   const loginExample = async (credentials) => {
     try {
       setLoading(true);
-      
+
       // Admin login example
       const adminResult = await authAPI.adminLogin(
-        credentials.emailOrPhone, 
+        credentials.emailOrPhone,
         credentials.password
       );
-      
+
       // Set session data
       apiUtils.setSession(adminResult);
-      
+
       toast.success('Login successful!');
       return adminResult;
-      
+
     } catch (error) {
       const { message } = apiUtils.handleError(error);
       toast.error(message);
@@ -161,16 +161,16 @@ const ExampleUsage = () => {
   const userLoginExample = async (credentials) => {
     try {
       setLoading(true);
-      
+
       const result = await authAPI.userLogin(
-        credentials.name, 
+        credentials.name,
         credentials.pin
       );
-      
+
       apiUtils.setSession(result);
       toast.success('Login successful!');
       return result;
-      
+
     } catch (error) {
       const { message } = apiUtils.handleError(error);
       toast.error(message);
@@ -198,7 +198,7 @@ const ExampleUsage = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">API Service Usage Examples</h1>
-      
+
       {/* Authentication Status */}
       <div className="mb-6 p-4 bg-gray-100 rounded-lg">
         <h2 className="text-lg font-semibold mb-2">Authentication Status</h2>
@@ -341,7 +341,7 @@ const ExampleUsage = () => {
       <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
         <h3 className="text-white mb-2">Code Examples:</h3>
         <pre>
-{`// Import the API service
+          {`// Import the API service
 import { 
   authAPI, 
   expenseAPI, 

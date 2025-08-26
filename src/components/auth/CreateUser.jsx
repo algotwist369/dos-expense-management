@@ -42,9 +42,6 @@ const CreateUser = () => {
   const handleBack = () => {
     // Simple go back in browser history
     window.history.back();
-
-    // Or if using react-router-dom:
-    // navigate(-1);
   };
 
   return (
