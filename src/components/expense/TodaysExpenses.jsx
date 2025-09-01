@@ -104,7 +104,7 @@ export default function TodaysExpenses() {
         try {
             if (!window.confirm("Are you sure you want to delete this expense?")) return;
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/expense/${id}`, {
+            await axios.delete(`https://expense.d0s369.co.in/api/expense/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

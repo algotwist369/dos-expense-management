@@ -120,7 +120,7 @@ export const expenseAPI = {
   // Get expenses by user
   getExpensesByUser: async (userId) => {
     const token = localStorage.getItem("token");
-    const res = await axios.get(`http://localhost:5000/api/expense/${userId}`, {
+    const res = await axios.get(`https://expense.d0s369.co.in/api/expense/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;

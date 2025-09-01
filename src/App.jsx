@@ -19,6 +19,12 @@ import APITest from './components/APITest';
 import APIDebug from './components/APIDebug';
 import SocialMedia from './socialMedia/SocialMedia';
 import { useEffect, useState } from 'react';
+import PdfUploader from './googleAds/components/PdfUploader';
+import InvoiceDetail from './googleAds/components/InvoiceDetail';
+import GoogleAdsInvoices from './googleAds/components/GoogleAdsInvoices';
+import MetaAdsInvoices from './googleAds/components/MetaAdsInvoices';
+import BulkDownloadManager from './googleAds/components/BulkDownloadManager';
+import BulkDeleteManager from './googleAds/components/BulkDeleteManager';
 
 // Root redirect component
 const RootRedirect = () => {
@@ -135,6 +141,56 @@ const App = () => {
             <Route path="/add-user" element={<CreateUser />} />
             <Route path="/api-test" element={<APITest />} />
             <Route path="/api-debug" element={<APIDebug />} />
+
+            {/* Google Ads routes */}
+            <Route 
+              path="/upload" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <PdfUploader />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/invoice/:id" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <InvoiceDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/google-ads" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <GoogleAdsInvoices />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/meta-ads" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <MetaAdsInvoices />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/bulk-download" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <BulkDownloadManager />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/bulk-delete" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <BulkDeleteManager />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Protected routes */}
             <Route
