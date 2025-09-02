@@ -29,29 +29,6 @@ const MetaAdsInvoices = () => {
             getValue: () => analytics?.analytics?.[0]?.totalAmount || invoices.reduce((sum, inv) => sum + (inv.extractedData?.totalAmount || 0), 0),
             formatValue: (value) => formatCurrency(value, 'INR')
         },
-        {
-            id: 'totalImpressions',
-            title: 'Total Impressions',
-            getValue: () => analytics?.analytics?.[0]?.totalImpressions || invoices.reduce((sum, inv) => {
-                const totals = getCampaignTotals(inv);
-                return sum + totals.impressions;
-            }, 0),
-            formatValue: (value) => value.toLocaleString()
-        },
-        {
-            id: 'avgCPM',
-            title: 'Avg CPM',
-            getValue: () => {
-                if (analytics?.analytics?.[0]?.avgCPM) return analytics.analytics[0].avgCPM;
-                const totalSpend = invoices.reduce((sum, inv) => sum + (inv.extractedData?.totalAmount || 0), 0);
-                const totalImpressions = invoices.reduce((sum, inv) => {
-                    const totals = getCampaignTotals(inv);
-                    return sum + totals.impressions;
-                }, 0);
-                return totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : 0;
-            },
-            formatValue: (value) => value > 0 ? formatCurrency(value, 'INR') : '-'
-        }
     ];
 
     // Table columns configuration
@@ -76,16 +53,16 @@ const MetaAdsInvoices = () => {
             label: 'Total Amount',
             className: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
         },
-        {
-            key: 'impressions',
-            label: 'Impressions',
-            className: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-        },
-        {
-            key: 'cpm',
-            label: 'CPM',
-            className: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-        },
+        // {
+        //     key: 'impressions',
+        //     label: 'Impressions',
+        //     className: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+        // },
+        // {
+        //     key: 'cpm',
+        //     label: 'CPM',
+        //     className: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+        // },
         {
             key: 'actions',
             label: 'Actions',
@@ -668,10 +645,10 @@ const MetaAdsInvoices = () => {
                                                 onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
                                                 disabled={page === '...'}
                                                 className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${page === current
-                                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                        : page === '...'
-                                                            ? 'bg-white border-gray-300 text-gray-500 cursor-default'
-                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                    : page === '...'
+                                                        ? 'bg-white border-gray-300 text-gray-500 cursor-default'
+                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                                                     }`}
                                             >
                                                 {page}

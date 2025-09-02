@@ -605,7 +605,7 @@ const ExpenseForm = () => {
     };
 
     return (
-        <div className={`${['shailesh', 'saurabh', 'omprakash', 'omkar', 'khushi'].includes(localStorage.getItem('name')) ? 'hidden' : 'block'} min-h-screen py-2 px-4 transition-colors duration-200 ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
+        <div className={`${['shailesh', 'saurabh', 'omprakash', 'omkar', 'khushi', 'mehul'].includes(localStorage.getItem('name')) ? 'hidden' : 'block'} min-h-screen py-2 px-4 transition-colors duration-200 ${isDarkMode ? 'bg-gradient-to-b from-gray-900 to-gray-800' : 'bg-gradient-to-b from-blue-50 to-white'}`}>
             <ToastContainer
                 position="top-right"
                 autoClose={3000}

@@ -17,15 +17,14 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import GoogleAdsDashboard from '../../googleAds/GoogleAdsDashboard';
+
 
 import MetaAdsInvoices from "../../googleAds/components/MetaAdsInvoices";
 import GoogleAdsInvoices from "../../googleAds/components/GoogleAdsInvoices";
 import ExpensesFilters from './ExpensesFilters';
 import ExpensesTableView from './ExpensesTableView';
-import AnalyticsDashboard from './AnalyticsDashboard';
 import { useExpensesAnalytics } from './useExpensesAnalytics';
+import JustdialData from "../../justdial/JustdialData";
 
 // Register Chart.js components
 ChartJS.register(
@@ -386,7 +385,11 @@ const ExpensesTable = () => {
                 (
                   <><MetaAdsInvoices /></>
                 ) :
-                null
+                activeTab === "justdial" ?
+                  (
+                    <JustdialData />
+                  ) :
+                  null
         }
       </div>
     </div>

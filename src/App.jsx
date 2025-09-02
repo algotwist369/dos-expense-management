@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -18,13 +19,16 @@ import CreateUser from './components/auth/CreateUser';
 import APITest from './components/APITest';
 import APIDebug from './components/APIDebug';
 import SocialMedia from './socialMedia/SocialMedia';
-import { useEffect, useState } from 'react';
 import PdfUploader from './googleAds/components/PdfUploader';
 import InvoiceDetail from './googleAds/components/InvoiceDetail';
 import GoogleAdsInvoices from './googleAds/components/GoogleAdsInvoices';
 import MetaAdsInvoices from './googleAds/components/MetaAdsInvoices';
 import BulkDownloadManager from './googleAds/components/BulkDownloadManager';
 import BulkDeleteManager from './googleAds/components/BulkDeleteManager';
+
+import JustdialData from './justdial/JustdialData';
+import AddJD from './justdial/component/AddJD';
+import UpdateJD from './justdial/component/UpdateJD';
 
 // Root redirect component
 const RootRedirect = () => {
@@ -119,6 +123,7 @@ const UserDashboard = () => (
   <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <Header />
     <SocialMedia />
+    <JustdialData />
     <div className="p-4">
       <ExpenseForm />
     </div>
@@ -141,55 +146,84 @@ const App = () => {
             <Route path="/add-user" element={<CreateUser />} />
             <Route path="/api-test" element={<APITest />} />
             <Route path="/api-debug" element={<APIDebug />} />
+            <Route path="/justdial-data" element={<JustdialData />} />
+
+            {/* justdial Ads routes */}
+            <Route
+              path="/justdial-data"
+              element={
+                <ProtectedRoute allowedRoles={['user']}>
+                  <JustdialData />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/justdial/add"
+              element={
+                <ProtectedRoute allowedRoles={['user']}>
+                  <AddJD />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/justdial/edit/:id"
+              element={
+                <ProtectedRoute allowedRoles={['user']}>
+                  <UpdateJD />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Google Ads routes */}
-            <Route 
-              path="/upload" 
+            <Route
+              path="/upload"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <PdfUploader />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/invoice/:id" 
+            <Route
+              path="/invoice/:id"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <InvoiceDetail />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/google-ads" 
+            <Route
+              path="/google-ads"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <GoogleAdsInvoices />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/meta-ads" 
+            <Route
+              path="/meta-ads"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <MetaAdsInvoices />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/bulk-download" 
+            <Route
+              path="/bulk-download"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <BulkDownloadManager />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/bulk-delete" 
+            <Route
+              path="/bulk-delete"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <BulkDeleteManager />
                 </ProtectedRoute>
-              } 
+              }
             />
 
             {/* Protected routes */}

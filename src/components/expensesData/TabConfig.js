@@ -23,6 +23,14 @@ export const tabsConfig = [
     badge: null,
     disabled: false,
     description: "Manage Meta Ads invoices and campaigns"
+  },
+  {
+    id: "justdial",
+    label: "Justdial",
+    showFilters: false,
+    badge: null,
+    disabled: false,
+    description: "Manage Justdial invoices and campaigns"
   }
 ];
 
@@ -51,7 +59,7 @@ export const addTab = (newTab) => {
     console.warn(`Tab with ID "${newTab.id}" already exists`);
     return tabsConfig;
   }
-  
+
   // Add the new tab
   tabsConfig.push({
     id: newTab.id,
@@ -62,7 +70,7 @@ export const addTab = (newTab) => {
     disabled: newTab.disabled || false,
     description: newTab.description || newTab.label
   });
-  
+
   return tabsConfig;
 };
 
